@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Navigation MapBox</string>
+    <string name="places_api_key">AIzaSyAojDFWS6ri1X6Nwue3YgZ0XL8YVIdcrSs</string>
+</resources>
