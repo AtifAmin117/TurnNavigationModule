@@ -24,7 +24,7 @@
             android:name=".StartNavigationActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".LocationSelectionActivity"
             android:exported="true">
         </activity>
         <activity

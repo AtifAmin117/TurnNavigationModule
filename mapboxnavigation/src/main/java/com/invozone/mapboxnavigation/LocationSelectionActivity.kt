@@ -2,10 +2,7 @@ package com.invozone.mapboxnavigation
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Dialog
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -18,13 +15,11 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
 import android.view.Window
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatAutoCompleteTextView
-import androidx.databinding.DataBindingUtil
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.libraries.places.api.net.PlacesClient
@@ -34,14 +29,12 @@ import com.invozone.mapboxnavigation.LocationHandler.isGpsEnabled
 import com.invozone.mapboxnavigation.LocationHandler.isLocationApproved
 import com.invozone.mapboxnavigation.ScreenUtils.getScreenHeight
 import com.invozone.mapboxnavigation.ScreenUtils.getScreenWidth
-import com.invozone.mapboxnavigation.databinding.ActivityMainBinding
-import com.invozone.mapboxnavigation.databinding.DialogProgressBinding
 import com.invozone.navigationmapbox.adapter.PlaceArrayAdapter
 import com.invozone.navigationmapbox.model.PlaceDataModel
 import kotlinx.coroutines.*
 import java.util.*
 
-open class MainActivity : AppCompatActivity() {
+open class LocationSelectionActivity : AppCompatActivity() {
     private val placesClient: PlacesClient get() = (application as MainApplication).getPlaceClient()
     private var startPlaceAdapter: PlaceArrayAdapter? = null
     private var destinationPlaceAdapter: PlaceArrayAdapter? = null
@@ -66,7 +59,7 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.location_selection_activity)
         etStartText = findViewById(R.id.etStartText)
         etDestinationText = findViewById(R.id.etDestinationText)
         btnStartNav = findViewById(R.id.btn_start_nav)
@@ -187,7 +180,7 @@ open class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.Main + handler).launch {
             async(Dispatchers.IO + handler) {
 
-                val geocoder = Geocoder(this@MainActivity, Locale.getDefault())
+                val geocoder = Geocoder(this@LocationSelectionActivity, Locale.getDefault())
                 addresses = geocoder.getFromLocation(mLoc.placeLatitude, mLoc.placeLongitude, 1)
             }.await()
             runOnUiThread {
@@ -228,7 +221,7 @@ open class MainActivity : AppCompatActivity() {
                     Log.d("MapInformation", "Addresses are equals")
 
                     async(Dispatchers.IO + handler) {
-                        val geocoder = Geocoder(this@MainActivity, Locale.getDefault())
+                        val geocoder = Geocoder(this@LocationSelectionActivity, Locale.getDefault())
                         endResponses = geocoder.getFromLocationName(endAddress, 1)
                         Log.d("MapInformation", "Geocoder End")
                     }.await()
@@ -253,7 +246,7 @@ open class MainActivity : AppCompatActivity() {
                     Log.d("MapInformation", "Addresses are not equals")
 
                     async(Dispatchers.IO + handler) {
-                        val geocoder = Geocoder(this@MainActivity, Locale.getDefault())
+                        val geocoder = Geocoder(this@LocationSelectionActivity, Locale.getDefault())
                         startResponses = geocoder.getFromLocationName(startAddress, 1)
                         Log.d("MapInformation", "Geocoder Start")
                     }.await()
@@ -262,7 +255,7 @@ open class MainActivity : AppCompatActivity() {
                     if (startResponses.isNotEmpty()) {
                         Log.d("MapInformation", "First Response is ready")
                         async(Dispatchers.IO + handler) {
-                            val geocoder = Geocoder(this@MainActivity, Locale.getDefault())
+                            val geocoder = Geocoder(this@LocationSelectionActivity, Locale.getDefault())
                             endResponses = geocoder.getFromLocationName(endAddress, 1)
                             Log.d("MapInformation", "Geocoder End")
                         }.await()
