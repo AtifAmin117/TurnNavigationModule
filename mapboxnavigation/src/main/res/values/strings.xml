@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">Navigation MapBox</string>
-    <string name="places_api_key">AIzaSyAojDFWS6ri1X6Nwue3YgZ0XL8YVIdcrSs</string>
+    <string name="places_api_key">AIzaSyAMlml7aqa1BQRUnmmmgixmFoDR3mdpRUI</string>
+    <string name="where_are_you_going">Where are you going?</string>
+    <string name="book_on_demand_or_pre_scheduled_rides">Book now</string>
+    <string name="pick_up_at">PICK UP AT</string>
+    <string name="enter_destination">Destination</string>
+    <string name="enter_pickup_location">Enter Pickup Location</string>
+    <string name="search_place">Search Place</string>
+    <string name="find_route">Find Route</string>
 </resources>

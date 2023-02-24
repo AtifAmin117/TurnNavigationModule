@@ -14,12 +14,17 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <androidx.cardview.widget.CardView
+        <RelativeLayout
             android:id="@+id/tripProgressCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:visibility="invisible"
+            android:visibility="gone"
             app:cardElevation="8dp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginEnd="@dimen/_10sdp"
+            android:layout_marginBottom="@dimen/_20sdp"
+            android:orientation="vertical"
+            android:background="@drawable/bg_route_info"
             app:cardUseCompatPadding="false"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -27,17 +32,21 @@
 
             <com.mapbox.navigation.ui.tripprogress.view.MapboxTripProgressView
                 android:id="@+id/tripProgressView"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="@dimen/_20sdp"
                 android:layout_height="wrap_content" />
 
             <ImageView
                 android:id="@+id/stop"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="@dimen/_10sdp"
                 android:layout_gravity="end|center_vertical"
-                android:layout_marginEnd="12dp"
-                app:srcCompat="@android:drawable/ic_delete" />
-        </androidx.cardview.widget.CardView>
+                app:srcCompat="@drawable/bg_cross" />
+        </RelativeLayout>
 
         <com.mapbox.navigation.ui.maneuver.view.MapboxManeuverView
             android:id="@+id/maneuverView"
@@ -77,6 +86,54 @@
             android:layout_marginEnd="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/routeOverview" />
+
+        <com.mapbox.navigation.ui.speedlimit.view.MapboxSpeedLimitView
+            android:id="@+id/speedLimitView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_100sdp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/bottom_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bottom_sheet_background_home_activity"
+            android:elevation="@dimen/_10sdp"
+            android:layout_marginStart="@dimen/_13sdp"
+            android:layout_marginBottom="@dimen/_25sdp"
+            android:layout_marginEnd="@dimen/_13sdp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/txt_enter_destination"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/_16sdp"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:layout_marginEnd="@dimen/_16sdp"
+                android:layout_marginBottom="@dimen/_10sdp"
+                android:background="@drawable/edittext_background"
+                android:drawableStart="@drawable/icn_search"
+                android:hint="@string/enter_destination"
+                android:drawablePadding="@dimen/_10sdp"
+                android:paddingStart="@dimen/_10sdp"
+                android:paddingTop="@dimen/_10sdp"
+                android:paddingEnd="@dimen/_15sdp"
+                android:paddingBottom="@dimen/_10sdp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

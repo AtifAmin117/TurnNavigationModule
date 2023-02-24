@@ -1,13 +1,14 @@
-package com.invozone.mapboxnavigation
+package com.invozone.mapboxnavigation.base
 
 import android.app.Application
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.invozone.mapboxnavigation.R
 
-class MainApplication:Application() {
+class BaseApplication:Application() {
     private lateinit var placesClient: PlacesClient
     companion object {
-        lateinit var _applicationContext: MainApplication
+        lateinit var _applicationContext: BaseApplication
             private set
     }
 
