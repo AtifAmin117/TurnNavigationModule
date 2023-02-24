@@ -18,7 +18,9 @@
         <entry key="mapboxnavigation/src/main/res/drawable/edittext_background.xml" value="0.1715" />
         <entry key="mapboxnavigation/src/main/res/drawable/fav_oval.xml" value="0.2685" />
         <entry key="mapboxnavigation/src/main/res/drawable/ic_close.xml" value="0.173" />
+        <entry key="mapboxnavigation/src/main/res/drawable/icn_search.xml" value="0.136" />
         <entry key="mapboxnavigation/src/main/res/drawable/icon_location_blue.xml" value="0.2685" />
+        <entry key="mapboxnavigation/src/main/res/drawable/recent.xml" value="0.136" />
         <entry key="mapboxnavigation/src/main/res/drawable/round_black.xml" value="0.2685" />
         <entry key="mapboxnavigation/src/main/res/drawable/square_primary.xml" value="0.2685" />
         <entry key="mapboxnavigation/src/main/res/layout/activity_home.xml" value="0.3030769230769231" />
