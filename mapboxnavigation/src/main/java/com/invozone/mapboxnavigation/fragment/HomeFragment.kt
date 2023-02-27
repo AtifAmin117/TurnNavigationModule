@@ -35,7 +35,9 @@ import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.camera
+import com.mapbox.maps.plugin.gestures.getGesturesSettings
 import com.mapbox.maps.plugin.locationcomponent.location
+import com.mapbox.maps.plugin.scalebar.scalebar
 import com.mapbox.navigation.base.TimeFormat
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
 import com.mapbox.navigation.base.extensions.applyLanguageAndVoiceUnitOptions
@@ -429,12 +431,12 @@ class HomeFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
         locationPermissionHelper = LocationPermissionHelper(WeakReference((requireActivity())))
         locationPermissionHelper.checkPermissions {
-
             setUpMap()
         }
         binding.txtEnterDestination.clickWithDebounce {
             navigateToEnterDestinationFragment()
         }
+
     }
 
     private fun handleUIOnBackStackCall() {
@@ -499,7 +501,7 @@ class HomeFragment : BaseFragment() {
 
     private fun setUpMap() {
         mapboxMap = binding.mapView.getMapboxMap()
-
+        binding.mapView.scalebar.enabled = false
         // initialize the location puck
         binding.mapView.location.apply {
             this.locationPuck = LocationPuck2D(

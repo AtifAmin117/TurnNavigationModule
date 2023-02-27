@@ -1,5 +1,7 @@
 package com.invozone.mapboxnavigation.fragment
 
+import android.content.res.Configuration
+import android.location.Location
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -9,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
@@ -19,13 +22,47 @@ import com.example.mapboxturnmodule.FavoriteListAdapter
 import com.example.mapboxturnmodule.PlacePredictionAdapter
 import com.example.mapboxturnmodule.RecentPlaceListAdapter
 import com.example.mapboxturnmodule.viewmodel.SharedTripViewModel
+import com.google.android.gms.maps.model.LatLng
+import com.invozone.mapboxnavigation.R
 import com.invozone.mapboxnavigation.base.BaseFragment
 import com.invozone.mapboxnavigation.databinding.FragmentEnterDestinationBinding
+import com.invozone.mapboxnavigation.extension.getCompleteAddressString
 import com.invozone.mapboxnavigation.listener.CustomOnClickListener
 import com.invozone.mapboxnavigation.model.*
 import com.invozone.mapboxnavigation.storage.KeyListPref
 import com.invozone.mapboxnavigation.storage.getPref
 import com.invozone.mapboxnavigation.viewmodel.PlacePredictionViewModel
+import com.mapbox.maps.MapboxMap
+import com.mapbox.maps.Style
+import com.mapbox.maps.plugin.LocationPuck2D
+import com.mapbox.maps.plugin.animation.camera
+import com.mapbox.maps.plugin.locationcomponent.location
+import com.mapbox.maps.plugin.scalebar.scalebar
+import com.mapbox.navigation.base.TimeFormat
+import com.mapbox.navigation.base.options.NavigationOptions
+import com.mapbox.navigation.core.MapboxNavigation
+import com.mapbox.navigation.core.MapboxNavigationProvider
+import com.mapbox.navigation.core.formatter.MapboxDistanceFormatter
+import com.mapbox.navigation.core.trip.session.LocationMatcherResult
+import com.mapbox.navigation.core.trip.session.LocationObserver
+import com.mapbox.navigation.ui.maneuver.api.MapboxManeuverApi
+import com.mapbox.navigation.ui.maps.camera.NavigationCamera
+import com.mapbox.navigation.ui.maps.camera.data.MapboxNavigationViewportDataSource
+import com.mapbox.navigation.ui.maps.camera.lifecycle.NavigationBasicGesturesHandler
+import com.mapbox.navigation.ui.maps.camera.state.NavigationCameraState
+import com.mapbox.navigation.ui.maps.camera.transition.NavigationCameraTransitionOptions
+import com.mapbox.navigation.ui.maps.location.NavigationLocationProvider
+import com.mapbox.navigation.ui.maps.route.arrow.api.MapboxRouteArrowView
+import com.mapbox.navigation.ui.maps.route.arrow.model.RouteArrowOptions
+import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
+import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
+import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineOptions
+import com.mapbox.navigation.ui.tripprogress.api.MapboxTripProgressApi
+import com.mapbox.navigation.ui.tripprogress.model.*
+import com.mapbox.navigation.ui.voice.api.MapboxSpeechApi
+import com.mapbox.navigation.ui.voice.api.MapboxVoiceInstructionsPlayer
+import java.util.*
+import kotlin.collections.ArrayList
 
 class EnterDestinationFragment : BaseFragment() {
     private lateinit var binding: FragmentEnterDestinationBinding
@@ -48,6 +85,15 @@ class EnterDestinationFragment : BaseFragment() {
     private val placePredictionViewModel by viewModels<PlacePredictionViewModel>()
     private var isNewSession = false
 
+    /*mapbox*/
+    private lateinit var mapboxMap: MapboxMap
+    private val navigationLocationProvider = NavigationLocationProvider()
+    private lateinit var navigationCamera: NavigationCamera
+    private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
+    private lateinit var mapboxNavigation: MapboxNavigation
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         placePredictionViewModel.predictionLiveData.observe(this){
@@ -64,11 +110,92 @@ class EnterDestinationFragment : BaseFragment() {
         binding = FragmentEnterDestinationBinding.inflate(inflater, container, false)
         return binding.root
     }
+    private fun setUpMap() {
+        mapboxMap = binding.mapView.getMapboxMap()
+        binding.mapView.scalebar.enabled = false
+
+        // initialize the location puck
+        binding.mapView.location.apply {
+            this.locationPuck = LocationPuck2D(
+                bearingImage = ContextCompat.getDrawable(
+                    requireContext(),
+                    R.drawable.ic_navigation_puck_icon
+                )
+            )
+            setLocationProvider(navigationLocationProvider)
+            enabled = true
+        }
+        // initialize Mapbox Navigation
+        mapboxNavigation = if (MapboxNavigationProvider.isCreated()) {
+            MapboxNavigationProvider.retrieve()
+        } else {
+            MapboxNavigationProvider.create(
+                NavigationOptions.Builder(requireContext())
+                    .accessToken(getString(R.string.mapbox_access_token))
+                    // comment out the location engine setting block to disable simulation
+//                    .locationEngine(replayLocationEngine)
+                    .build()
+            )
+        }
+
+        // initialize Navigation Camera
+        viewportDataSource = MapboxNavigationViewportDataSource(mapboxMap)
+        navigationCamera = NavigationCamera(
+            mapboxMap,
+            binding.mapView.camera,
+            viewportDataSource
+        )
+
+        // load map style
+        mapboxMap.loadStyleUri(
+            Style.DARK
+        ) {}
+
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mapboxNavigation.registerLocationObserver(locationObserver)
+    }
+
+
+    private val locationObserver = object : LocationObserver {
+        var firstLocationUpdateReceived = false
+
+        override fun onNewRawLocation(rawLocation: Location) {
+            // not handled
+        }
+
+        override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
+            val enhancedLocation = locationMatcherResult.enhancedLocation
+            // update location puck's position on the map
+            navigationLocationProvider.changePosition(
+                location = enhancedLocation,
+                keyPoints = locationMatcherResult.keyPoints,
+            )
+
+            // update camera position to account for new location
+            viewportDataSource.onLocationChanged(enhancedLocation)
+            viewportDataSource.evaluate()
+
+            // if this is the first location update the activity has received,
+            // it's best to immediately move the camera to the current user location
+            if (!firstLocationUpdateReceived) {
+                firstLocationUpdateReceived = true
+                navigationCamera.requestNavigationCameraToOverview(
+                    stateTransitionOptions = NavigationCameraTransitionOptions.Builder()
+                        .maxDuration(0) // instant transition
+                        .build()
+                )
+            }
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         recentList = requireContext().getPref(KeyListPref.RECENT_LIST)
+        setUpMap()
         setupUI()
         setupDataInRecyclerView()
         setupListener()
@@ -208,6 +335,8 @@ class EnterDestinationFragment : BaseFragment() {
     override fun onStop() {
         super.onStop()
         handler.removeCallbacksAndMessages(null)
+        mapboxNavigation.unregisterLocationObserver(locationObserver)
+
     }
 
     private fun setupUI() {
