@@ -369,6 +369,7 @@ class HomeFragment : BaseFragment() {
         binding.tripProgressView.render(
             tripProgressApi.getTripProgress(routeProgress)
         )
+
     }
 
     /**

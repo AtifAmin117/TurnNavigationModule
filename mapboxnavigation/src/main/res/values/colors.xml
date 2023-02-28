@@ -11,5 +11,6 @@
     <color name="text_black_shade_color">#222B45</color>
     <color name="color_primary">#E479FF</color>
     <color name="text_gray_color">#ACB1C0</color>
+    <color name="transparent">#00000000</color>
 
 </resources>
