@@ -76,10 +76,6 @@ open class BaseFragment : Fragment() {
         }
     }
 
-    fun getPlaceClient(): PlacesClient{
-            return (requireActivity().application as BaseApplication).getPlaceClient()
-    }
-
     fun popFragment(depth: Int = 1) {
 //        hideKeyboard(activity)
         if (mFragmentNavigation != null) {

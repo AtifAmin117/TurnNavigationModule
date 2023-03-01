@@ -17,10 +17,10 @@ import com.invozone.mapboxnavigation.storage.setPref
 
 class PlacePredictionViewModel(val mApplication: Application) : BaseViewModel(mApplication) {
     private val placePredictionRepository by lazy {
-        PlacePredictionRepository(mApplication as BaseApplication)
+        PlacePredictionRepository(mApplication)
     }
     private val placeDetailRepository by lazy {
-        PlaceDetailRepository(mApplication as BaseApplication)
+        PlaceDetailRepository(mApplication)
     }
     private var recentList: ArrayList<MainPlace>  = mApplication.getPref(KeyListPref.RECENT_LIST)
     private var _predictionLiveData = MutableLiveData<List<AutocompletePrediction>>()
