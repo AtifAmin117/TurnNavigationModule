@@ -12,5 +12,10 @@
     <color name="color_primary">#E479FF</color>
     <color name="text_gray_color">#ACB1C0</color>
     <color name="transparent">#00000000</color>
+    <color name="bttn_grey_disabled">#F7F7F7</color>
+    <color name="text_color">#6C6C6C</color>
+    <color name="text_color_dark">#1E1E1E</color>
+    <color name="text_color_gray">#6C6C6C</color>
+    <color name="text_color_light_gray">#AAAAAA</color>
 
 </resources>

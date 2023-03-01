@@ -10,8 +10,7 @@ import com.invozone.mapboxnavigation.base.BaseFragment
 import com.invozone.mapboxnavigation.databinding.ActivityHomeBinding
 import com.invozone.mapboxnavigation.extension.hideKeyboard
 import com.invozone.mapboxnavigation.fragment.HomeFragment
-import com.invozone.mapboxnavigation.fragment.TestFragment
-import com.ncapdevi.fragnav.FragNavController
+ import com.ncapdevi.fragnav.FragNavController
 import com.ncapdevi.fragnav.FragNavLogger
 import com.ncapdevi.fragnav.FragNavSwitchController
 import com.ncapdevi.fragnav.FragNavTransactionOptions

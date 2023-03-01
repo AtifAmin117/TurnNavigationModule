@@ -1,6 +1,5 @@
 package com.invozone.mapboxnavigation.fragment
 
-import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.location.Location
@@ -35,7 +34,6 @@ import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.camera
-import com.mapbox.maps.plugin.gestures.getGesturesSettings
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.plugin.scalebar.scalebar
 import com.mapbox.navigation.base.TimeFormat
@@ -86,6 +84,7 @@ import com.mapbox.navigation.ui.voice.model.SpeechValue
 import com.mapbox.navigation.ui.voice.model.SpeechVolume
 import com.ncapdevi.fragnav.FragNavTransactionOptions
 import java.lang.ref.WeakReference
+import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -369,7 +368,9 @@ class HomeFragment : BaseFragment() {
         binding.tripProgressView.render(
             tripProgressApi.getTripProgress(routeProgress)
         )
-
+        binding.tripProgress.render(
+            tripProgressApi.getTripProgress(routeProgress)
+        )
     }
 
     /**
@@ -435,6 +436,9 @@ class HomeFragment : BaseFragment() {
             setUpMap()
         }
         binding.txtEnterDestination.clickWithDebounce {
+            navigateToEnterDestinationFragment()
+        }
+        binding.selectLocation.clickWithDebounce {
             navigateToEnterDestinationFragment()
         }
 
@@ -625,16 +629,36 @@ class HomeFragment : BaseFragment() {
         binding.stop.setOnClickListener {
             clearRouteAndStopNavigation()
         }
+
+        binding.startNavigation.setOnClickListener {
+            navigationCamera.requestNavigationCameraToFollowing()
+            binding.routeOverview.showTextAndExtend(BUTTON_ANIMATION_DURATION)
+
+            if (isRouteFetched) {
+                isRouteFetched = false
+                binding.speedLimitView.visibility = View.VISIBLE
+                binding.maneuverView.visibility = View.VISIBLE
+                binding.tripProgressCard.visibility = View.VISIBLE
+                binding.selectLocation.visibility = View.GONE
+            }
+        }
         binding.recenter.setOnClickListener {
             navigationCamera.requestNavigationCameraToFollowing()
             binding.routeOverview.showTextAndExtend(BUTTON_ANIMATION_DURATION)
 
             if (isRouteFetched) {
                 isRouteFetched = false
+                binding.speedLimitView.visibility = View.VISIBLE
                 binding.maneuverView.visibility = View.VISIBLE
+                binding.tripProgressCard.visibility = View.VISIBLE
+                binding.selectLocation.visibility = View.GONE
             }
         }
         binding.routeOverview.setOnClickListener {
+            navigationCamera.requestNavigationCameraToOverview()
+            binding.recenter.showTextAndExtend(BUTTON_ANIMATION_DURATION)
+        }
+        binding.altRoute.setOnClickListener {
             navigationCamera.requestNavigationCameraToOverview()
             binding.recenter.showTextAndExtend(BUTTON_ANIMATION_DURATION)
         }
@@ -764,15 +788,28 @@ class HomeFragment : BaseFragment() {
         startSimulation(routes.first())
         showProgressDialog(false)
         // show UI elements
+        binding.userIcon.visibility = View.GONE
         binding.soundButton.visibility = View.VISIBLE
-        binding.routeOverview.visibility = View.VISIBLE
-        binding.tripProgressCard.visibility = View.VISIBLE
-        binding.speedLimitView.visibility = View.VISIBLE
-
+        binding.selectLocation.visibility = View.VISIBLE
+        val km = routes.first().distance() / 1000
+        binding.routeDistance.text = km.toInt().toString()+ "km"
+        binding.routeTime.text = convertSecondToTime(routes.first().duration().toInt())
+        binding.routeCityName.text =
+            sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_name
+        binding.edtPickupAddress.setText(sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.PICKUP)?.place_address)
+        binding.edtDestinationAddress.setText(sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_name)
 
         // move the camera to overview when new route is available
         navigationCamera.requestNavigationCameraToOverview()
         isRouteFetched = true
+    }
+
+    private fun convertSecondToTime(seconds: Int): String {
+        val hours = seconds / 3600
+        val minutes = (seconds % 3600) / 60
+        val hoursStr = if (hours == 0) "" else "${hours}h"
+        val minutesStr = if (minutes == 1) "1 m" else "${minutes}m"
+        return "$hoursStr $minutesStr"
     }
 
     private fun clearRouteAndStopNavigation() {
@@ -785,10 +822,12 @@ class HomeFragment : BaseFragment() {
         // hide UI elements
         binding.soundButton.visibility = View.INVISIBLE
         binding.maneuverView.visibility = View.INVISIBLE
-        binding.routeOverview.visibility = View.INVISIBLE
+//        binding.routeOverview.visibility = View.INVISIBLE
         binding.tripProgressCard.visibility = View.INVISIBLE
         binding.speedLimitView.visibility = View.INVISIBLE
         binding.bottomView.visibility = View.VISIBLE
+        binding.userIcon.visibility = View.VISIBLE
+
 
     }
 

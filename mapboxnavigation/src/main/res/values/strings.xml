@@ -8,4 +8,6 @@
     <string name="enter_pickup_location">Enter Pickup Location</string>
     <string name="search_place">Search Place</string>
     <string name="find_route">Find Route</string>
+    <string name="routes">Routes</string>
+    <string name="fastest_route_now">Fastest Route now</string>
 </resources>

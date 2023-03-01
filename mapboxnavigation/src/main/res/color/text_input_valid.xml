@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_enabled="true" android:color="@color/color_primary"/>
-    <item android:state_hovered="true" android:color="@color/color_primary"/>
-    <item android:state_focused="true" android:color="@color/color_primary"/>
-    <item android:color="@color/color_primary"/>
+    <item android:state_enabled="false" android:color="@color/bttn_grey_disabled"/>
+    <item android:state_pressed="false"
+        android:color="@color/color_primary" /> <!-- pressed -->
+    <item android:state_pressed="true"
+        android:color="@color/color_primary" /> <!-- focused -->
+    <item android:state_enabled="true" android:color="@color/bttn_grey_disabled"/> <!-- idle state -->
 </selector>
