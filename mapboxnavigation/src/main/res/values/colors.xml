@@ -17,5 +17,7 @@
     <color name="text_color_dark">#1E1E1E</color>
     <color name="text_color_gray">#6C6C6C</color>
     <color name="text_color_light_gray">#AAAAAA</color>
+    <color name="normal_speed">#36D0A1</color>
+    <color name="over_speed">#CB0003</color>
 
 </resources>

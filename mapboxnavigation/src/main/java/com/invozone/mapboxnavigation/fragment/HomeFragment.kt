@@ -1,5 +1,6 @@
 package com.invozone.mapboxnavigation.fragment
 
+import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.location.Location
@@ -43,10 +44,12 @@ import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.base.route.RouterCallback
 import com.mapbox.navigation.base.route.RouterFailure
 import com.mapbox.navigation.base.route.RouterOrigin
+import com.mapbox.navigation.base.speed.model.SpeedLimitUnit
 import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.MapboxNavigationProvider
 import com.mapbox.navigation.core.directions.session.RoutesObserver
 import com.mapbox.navigation.core.formatter.MapboxDistanceFormatter
+import com.mapbox.navigation.core.internal.extensions.flowLocationMatcherResult
 import com.mapbox.navigation.core.replay.MapboxReplayer
 import com.mapbox.navigation.core.replay.ReplayLocationEngine
 import com.mapbox.navigation.core.replay.route.ReplayProgressObserver
@@ -83,12 +86,16 @@ import com.mapbox.navigation.ui.voice.model.SpeechError
 import com.mapbox.navigation.ui.voice.model.SpeechValue
 import com.mapbox.navigation.ui.voice.model.SpeechVolume
 import com.ncapdevi.fragnav.FragNavTransactionOptions
+import kotlinx.coroutines.*
 import java.lang.ref.WeakReference
-import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.roundToInt
 
 
 class HomeFragment : BaseFragment() {
+    private var speedKmh: Int = 0
+    lateinit var coroutineScope: CoroutineScope
+    private val KILO_MILES_FACTOR = 0.621371
 
     private lateinit var locationPermissionHelper: LocationPermissionHelper
 
@@ -293,14 +300,14 @@ class HomeFragment : BaseFragment() {
     private val locationObserver = object : LocationObserver {
         var firstLocationUpdateReceived = false
 
-        override fun onNewRawLocation(rawLocation: Location) {
-            // not handled
+        override fun onNewRawLocation(location: Location) {
+            val speed: Float = location.speed
+            speedKmh = (speed * 3600 / 1000).toInt()
+            Log.d("Speed", "Current speed: $speedKmh km/h")
+            binding.normalSpeedTv.text = speedKmh.toString()
         }
 
         override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
-            val value = speedLimitApi.updateSpeedLimit(locationMatcherResult.speedLimit)
-            binding.speedLimitView.render(value)
-
             val enhancedLocation = locationMatcherResult.enhancedLocation
             val currLatLong = LatLng(+enhancedLocation.latitude, +enhancedLocation.longitude)
             val currLocationAddress = currLatLong.getCompleteAddressString(requireContext())
@@ -788,11 +795,10 @@ class HomeFragment : BaseFragment() {
         startSimulation(routes.first())
         showProgressDialog(false)
         // show UI elements
-        binding.userIcon.visibility = View.GONE
         binding.soundButton.visibility = View.VISIBLE
         binding.selectLocation.visibility = View.VISIBLE
         val km = routes.first().distance() / 1000
-        binding.routeDistance.text = km.toInt().toString()+ "km"
+        binding.routeDistance.text = km.toInt().toString() + "km"
         binding.routeTime.text = convertSecondToTime(routes.first().duration().toInt())
         binding.routeCityName.text =
             sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_name
@@ -802,6 +808,38 @@ class HomeFragment : BaseFragment() {
         // move the camera to overview when new route is available
         navigationCamera.requestNavigationCameraToOverview()
         isRouteFetched = true
+
+        coroutineScope.launch {
+            mapboxNavigation.flowLocationMatcherResult().collect {
+                val postedSpeedLimitUnit = it.speedLimit?.speedLimitUnit
+                val postedSpeedLimit = it.speedLimit?.speedKmph
+                if (postedSpeedLimit != null) {
+                    if (postedSpeedLimitUnit == SpeedLimitUnit.KILOMETRES_PER_HOUR) {
+                        checkOverSpeedScenario(postedSpeedLimit)
+                    } else {
+                        val speed = (
+                                5 * (postedSpeedLimit * KILO_MILES_FACTOR / 5)
+                                    .roundToInt()
+                                ).toDouble()
+                        val formattedSpeed = String.format("%.0f", speed)
+                        checkOverSpeedScenario(formattedSpeed.toInt())
+                    }
+                }
+            }
+        }
+    }
+
+    private fun checkOverSpeedScenario(maxSpeedLimit: Int) {
+        binding.overSpeedTv.text = maxSpeedLimit.toString()
+        if (speedKmh > maxSpeedLimit) {
+            binding.overSpeedRl.visibility = View.VISIBLE
+            binding.normalSpeedTv.setTextColor(ContextCompat.getColor(requireContext(),R.color.over_speed))
+
+        }else{
+            binding.overSpeedRl.visibility = View.GONE
+            binding.normalSpeedTv.setTextColor(ContextCompat.getColor(requireContext(),R.color.normal_speed))
+
+        }
     }
 
     private fun convertSecondToTime(seconds: Int): String {
@@ -824,11 +862,8 @@ class HomeFragment : BaseFragment() {
         binding.maneuverView.visibility = View.INVISIBLE
 //        binding.routeOverview.visibility = View.INVISIBLE
         binding.tripProgressCard.visibility = View.INVISIBLE
-        binding.speedLimitView.visibility = View.INVISIBLE
+        binding.speedLimitView.visibility = View.GONE
         binding.bottomView.visibility = View.VISIBLE
-        binding.userIcon.visibility = View.VISIBLE
-
-
     }
 
     private fun startSimulation(route: DirectionsRoute) {
@@ -840,5 +875,15 @@ class HomeFragment : BaseFragment() {
             seekTo(replayEvents.first())
             play()
         }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        coroutineScope.cancel()
     }
 }

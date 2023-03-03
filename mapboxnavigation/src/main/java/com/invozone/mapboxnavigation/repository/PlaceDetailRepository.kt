@@ -8,7 +8,6 @@ import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FetchPlaceResponse
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.invozone.mapboxnavigation.R
-import com.invozone.mapboxnavigation.base.BaseApplication
 
 class PlaceDetailRepository(val application: Application) {
     private lateinit var placesClient: PlacesClient

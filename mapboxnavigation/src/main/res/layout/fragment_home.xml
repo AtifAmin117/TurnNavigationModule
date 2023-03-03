@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -36,12 +37,12 @@
                 android:id="@+id/routeMapTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                 android:layout_marginTop="@dimen/_15sdp"
+                android:layout_marginTop="@dimen/_15sdp"
                 android:layout_marginEnd="@dimen/_5sdp"
                 android:textColor="@color/white"
                 android:textSize="18sp"
-                android:visibility="gone"
                 android:textStyle="normal"
+                android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -55,9 +56,9 @@
                 android:layout_marginStart="@dimen/_17sdp"
                 android:paddingTop="@dimen/_2sdp"
                 android:textColor="#EDEDED"
-                android:visibility="gone"
                 android:textSize="12sp"
                 android:textStyle="normal"
+                android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -67,15 +68,15 @@
                 android:id="@+id/routeTotalTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toEndOf="@+id/routeMapDistance"
                 android:layout_below="@+id/routeMapTime"
                 android:layout_marginEnd="@dimen/_15sdp"
+                android:layout_toEndOf="@+id/routeMapDistance"
+                android:paddingStart="@dimen/_5sdp"
                 android:paddingTop="@dimen/_2sdp"
                 android:textColor="#EDEDED"
-                android:paddingStart="@dimen/_5sdp"
-                android:visibility="gone"
                 android:textSize="12sp"
                 android:textStyle="normal"
+                android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -85,8 +86,7 @@
                 android:id="@+id/tripProgressView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                 />
+                android:layout_centerVertical="true" />
 
             <ImageView
                 android:id="@+id/alt_route"
@@ -105,7 +105,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:layout_gravity="end|center_vertical"
-                 app:srcCompat="@drawable/bg_cross" />
+                app:srcCompat="@drawable/bg_cross" />
         </RelativeLayout>
 
         <com.mapbox.navigation.ui.maneuver.view.MapboxManeuverView
@@ -147,27 +147,73 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/routeOverview" />
 
-        <com.mapbox.navigation.ui.speedlimit.view.MapboxSpeedLimitView
-            android:id="@+id/speedLimitView"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/_10sdp"
-            android:layout_marginTop="@dimen/_100sdp"
+            android:id="@+id/speedLimitView"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
             android:visibility="gone"
+            android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/maneuverView">
 
-        <ImageView
-            android:id="@+id/userIcon"
-            android:layout_width="@dimen/_35sdp"
-            android:layout_height="@dimen/_35sdp"
-            android:layout_marginTop="@dimen/_40sdp"
-            android:layout_marginEnd="@dimen/_10sdp"
-            android:contentDescription="@string/app_name"
-            android:src="@drawable/user_icon"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            <RelativeLayout
+                android:id="@+id/normalSpeedRl"
+                android:layout_width="@dimen/_45sdp"
+                android:layout_height="@dimen/_45sdp"
+                android:background="@drawable/normal_speed_limit_bg"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
+                <TextView
+                    android:id="@+id/normalSpeedTv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="10dp"
+                    android:textColor="@color/normal_speed"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="45" />
+
+                <TextView
+                    android:id="@+id/speedUnit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/normalSpeedTv"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="-2dp"
+                    android:text="km/h"
+                    android:textColor="@color/normal_speed"
+                    android:textSize="9sp"
+                    android:textStyle="normal" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/overSpeedRl"
+                android:layout_width="@dimen/_22sdp"
+                android:layout_height="@dimen/_22sdp"
+                android:layout_marginEnd="-17dp"
+                android:visibility="gone"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:background="@drawable/over_speed_limit_bg"
+                app:layout_constraintEnd_toEndOf="@+id/normalSpeedRl"
+                app:layout_constraintTop_toTopOf="@+id/normalSpeedRl">
+
+                <TextView
+                    android:id="@+id/overSpeedTv"
+                    android:layout_width="21dp"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:gravity="center"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="normal"
+                    tools:text="45" />
+            </RelativeLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/bottom_view"
@@ -416,29 +462,10 @@
 
 
                 <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/routeFastest"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/routeCityName"
-                    android:layout_marginStart="@dimen/_10sdp"
-                    android:layout_marginEnd="@dimen/_15sdp"
-                    android:drawablePadding="@dimen/_12sdp"
-                    android:paddingTop="@dimen/_5sdp"
-                    android:paddingEnd="@dimen/_15sdp"
-                    android:text="@string/fastest_route_now"
-                    android:textColor="@color/text_color_gray"
-                    android:textSize="14sp"
-                    android:textStyle="normal"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/routeDistance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/routeFastest"
+                    android:layout_below="@+id/routeCityName"
                     android:layout_marginStart="@dimen/_10sdp"
                     android:layout_marginEnd="@dimen/_15sdp"
                     android:drawablePadding="@dimen/_12sdp"
