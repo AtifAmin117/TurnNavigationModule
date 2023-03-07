@@ -28,12 +28,13 @@
         <entry key="mapboxnavigation/src/main/res/drawable/round_black.xml" value="0.2685" />
         <entry key="mapboxnavigation/src/main/res/drawable/square_primary.xml" value="0.2685" />
         <entry key="mapboxnavigation/src/main/res/drawable/user_bg.xml" value="0.2405" />
-        <entry key="mapboxnavigation/src/main/res/layout/activity_home.xml" value="0.3030769230769231" />
+        <entry key="mapboxnavigation/src/main/res/layout/activity_home.xml" value="0.2691131498470948" />
         <entry key="mapboxnavigation/src/main/res/layout/activity_main.xml" value="0.1685185185185185" />
         <entry key="mapboxnavigation/src/main/res/layout/activity_route_direction.xml" value="0.19788818359375004" />
         <entry key="mapboxnavigation/src/main/res/layout/activity_start_navigation.xml" value="0.3609375" />
         <entry key="mapboxnavigation/src/main/res/layout/fragment_enter_destination.xml" value="0.25" />
-        <entry key="mapboxnavigation/src/main/res/layout/fragment_home.xml" value="0.9011615584066857" />
+        <entry key="mapboxnavigation/src/main/res/layout/fragment_home.xml" value="0.2505592841163311" />
+        <entry key="mapboxnavigation/src/main/res/layout/fragment_test.xml" value="0.25193481445312504" />
         <entry key="mapboxnavigation/src/main/res/layout/inflate_progress_view.xml" value="0.1625" />
         <entry key="mapboxnavigation/src/main/res/layout/item_favorite_place_list.xml" value="0.3078125" />
         <entry key="mapboxnavigation/src/main/res/layout/item_recent_place_list.xml" value="0.3078125" />

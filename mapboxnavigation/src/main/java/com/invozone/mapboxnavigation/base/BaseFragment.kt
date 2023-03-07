@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
@@ -14,6 +15,7 @@ import com.ncapdevi.fragnav.FragNavTransactionOptions
 open class BaseFragment : Fragment() {
 
     private var mFragmentNavigation: FragmentNavigation? = null
+
     /**
      * Used when we dont want to create/inflate view if same fragment instance is used.
      */
@@ -49,6 +51,7 @@ open class BaseFragment : Fragment() {
             mFragmentNavigation = context
         }
     }
+
     interface FragmentNavigation {
         fun pushFragment(fragment: Fragment, transactionOptions: FragNavTransactionOptions? = null)
 
@@ -68,9 +71,10 @@ open class BaseFragment : Fragment() {
     open fun onBackPressed(): Boolean {
         return false
     }
-    fun pushFragment(fragment: Fragment,transactionOptions: FragNavTransactionOptions? = null) {
+
+    fun pushFragment(fragment: Fragment, transactionOptions: FragNavTransactionOptions? = null) {
         if (mFragmentNavigation != null) {
-            mFragmentNavigation?.pushFragment(fragment,transactionOptions)
+            mFragmentNavigation?.pushFragment(fragment, transactionOptions)
         } else {
             // todo logic when home Activity not implemented fragmentNavigation
         }
@@ -103,5 +107,9 @@ open class BaseFragment : Fragment() {
         }
 
     }
-    open fun attachObserver(){}
+
+    open fun attachObserver() {}
+    fun showToast(message: String) {
+        Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
+    }
 }

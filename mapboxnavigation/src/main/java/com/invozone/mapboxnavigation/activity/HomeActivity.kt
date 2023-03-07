@@ -1,7 +1,6 @@
 package com.invozone.mapboxnavigation.activity
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import com.invozone.mapboxnavigation.R
@@ -9,8 +8,8 @@ import com.invozone.mapboxnavigation.base.BaseActivity
 import com.invozone.mapboxnavigation.base.BaseFragment
 import com.invozone.mapboxnavigation.databinding.ActivityHomeBinding
 import com.invozone.mapboxnavigation.extension.hideKeyboard
-import com.invozone.mapboxnavigation.fragment.HomeFragment
- import com.ncapdevi.fragnav.FragNavController
+import com.invozone.mapboxnavigation.fragment.NavigationFragment
+import com.ncapdevi.fragnav.FragNavController
 import com.ncapdevi.fragnav.FragNavLogger
 import com.ncapdevi.fragnav.FragNavSwitchController
 import com.ncapdevi.fragnav.FragNavTransactionOptions
@@ -63,7 +62,7 @@ open class HomeActivity : BaseActivity(), BaseFragment.FragmentNavigation,
         get() = 1
 
     override fun getRootFragment(index: Int): Fragment {
-       return HomeFragment.newInstance()
+       return NavigationFragment.newInstance()
     }
 
     override fun onFragmentTransaction(

@@ -10,8 +10,5 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.test)
         startActivity(Intent(this, HomeActivity::class.java))
-
     }
-
-
 }
