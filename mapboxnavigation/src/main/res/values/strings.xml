@@ -10,4 +10,5 @@
     <string name="find_route">Find Route</string>
     <string name="routes">Routes</string>
     <string name="fastest_route_now">Fastest Route now</string>
+    <string name="current_loction">Current Location</string>
 </resources>

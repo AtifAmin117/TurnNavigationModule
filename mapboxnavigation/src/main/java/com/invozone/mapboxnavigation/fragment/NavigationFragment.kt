@@ -48,7 +48,9 @@ import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.camera
+import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.locationcomponent.location
+import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
 import com.mapbox.navigation.base.TimeFormat
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
@@ -105,6 +107,8 @@ import kotlin.math.roundToInt
 
 
 class NavigationFragment : BaseFragment() {
+    private lateinit var currLatLong: LatLng
+    private lateinit var currLocationAddress: String
     private var speedKmh: Int = 0
     lateinit var coroutineScope: CoroutineScope
     private val KILO_MILES_FACTOR = 0.621371
@@ -328,21 +332,15 @@ class NavigationFragment : BaseFragment() {
         override fun onNewRawLocation(location: Location) {
             val speed: Float = location.speed
             speedKmh = (speed * 3600 / 1000).toInt()
-            Log.d("Speed", "Current speed: $speedKmh km/h")
+            Log.d("NavigationFragment", "Current speed: $speedKmh km/h")
             binding.normalSpeedTv.text = speedKmh.toString()
         }
 
         override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
             val enhancedLocation = locationMatcherResult.enhancedLocation
-            val currLatLong = LatLng(+enhancedLocation.latitude, +enhancedLocation.longitude)
-            val currLocationAddress = currLatLong.getCompleteAddressString(requireContext())
-            sharedTripViewModel.trip.addPlace(
-                PlaceType.PICKUP,
-                currLatLong,
-                currLocationAddress
-            )
-            setPickupValueToEditText(currLocationAddress)
-
+            currLatLong = LatLng(+enhancedLocation.latitude, +enhancedLocation.longitude)
+            currLocationAddress = currLatLong.getCompleteAddressString(requireContext())
+            Log.d("NavigationFragment", "onNewLocationMatcherResult : " + currLocationAddress)
             // update location puck's position on the map
             navigationLocationProvider.changePosition(
                 location = enhancedLocation,
@@ -456,11 +454,11 @@ class NavigationFragment : BaseFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        placePredictionViewModel.predictionLiveData.observe(this){
+        placePredictionViewModel.predictionLiveData.observe(this) {
             placeAdapter.setPredictions(it)
-            binding.viewAnimator.displayedChild = if (it.isEmpty()) 0 else 1
+            binding.animateView.displayedChild = if (it.isEmpty()) 0 else 1
         }
-        handleUIOnBackStackCall()
+//        handleUIOnBackStackCall()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -476,6 +474,43 @@ class NavigationFragment : BaseFragment() {
         }
         binding.txtEnterDestination.clickWithDebounce {
             navigateToEnterDestinationFragment()
+        }
+        binding.txtPin.setOnClickListener {
+            if (binding.edtPickupAddress.hasFocus()) {
+                sharedTripViewModel.trip.addPlace(
+                    PlaceType.PICKUP,
+                    currLatLong,
+                    currLocationAddress
+                )
+                setPickupValueToEditText(currLocationAddress)
+                if (sharedTripViewModel.trip.isPickupAndDestinationsLocationAvailable()) {
+                    binding.viewAnimator.visibility = View.GONE
+                    binding.txtPin.visibility = View.GONE
+                    findRoute(
+                        Point.fromLngLat(
+                            sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_latLong!!.longitude,
+                            sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_latLong!!.latitude
+                        )
+                    )
+                }
+            } else {
+                sharedTripViewModel.trip.addPlace(
+                    PlaceType.DESTINATION,
+                    currLatLong,
+                    currLocationAddress
+                )
+                setDestinationValueToEditText(currLocationAddress)
+                if (sharedTripViewModel.trip.isPickupAndDestinationsLocationAvailable()) {
+                    binding.viewAnimator.visibility = View.GONE
+                    binding.txtPin.visibility = View.GONE
+                    findRoute(
+                        Point.fromLngLat(
+                            sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_latLong!!.longitude,
+                            sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_latLong!!.latitude
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -500,7 +535,8 @@ class NavigationFragment : BaseFragment() {
                     }
                     sharedTripViewModel.trip.addPlace(MainPlace)
                     if (sharedTripViewModel.trip.isPickupAndDestinationsLocationAvailable()) {
-                        binding.viewAnimator.visibility=View.GONE
+                        binding.viewAnimator.visibility = View.GONE
+                        binding.txtPin.visibility = View.GONE
                         findRoute(
                             Point.fromLngLat(
                                 sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_latLong!!.longitude,
@@ -509,9 +545,9 @@ class NavigationFragment : BaseFragment() {
                         )
                     } else {
                         if (binding.edtPickupAddress.hasFocus()) {
-                            setPickupValueToEditText(MainPlace.place_name)
+                            setPickupValueToEditText(MainPlace.place_address)
                         } else {
-                            setDestinationValueToEditText(MainPlace.place_name)
+                            setDestinationValueToEditText(MainPlace.place_address)
                         }
                     }
                 }
@@ -520,6 +556,7 @@ class NavigationFragment : BaseFragment() {
         adapter = ConcatAdapter(favoriteAdapter, recentPlaceListAdapter)
         binding.recyclerView.adapter = adapter
     }
+
     private fun setupListener() {
         textWatcherPickup = object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
@@ -530,7 +567,12 @@ class NavigationFragment : BaseFragment() {
                 if (pickupListenerCallRequired) {
                     edtType = PlaceType.PICKUP
                     handler.removeCallbacksAndMessages(null)
-                    handler.postDelayed({ placePredictionViewModel.searchPlace(queryText.toString(),isNewSession) }, 300)
+                    handler.postDelayed({
+                        placePredictionViewModel.searchPlace(
+                            queryText.toString(),
+                            isNewSession
+                        )
+                    }, 300)
                 }
             }
 
@@ -549,7 +591,12 @@ class NavigationFragment : BaseFragment() {
                     // is only executed if the EditText was directly changed by the user
                     edtType = PlaceType.DESTINATION
                     handler.removeCallbacksAndMessages(null)
-                    handler.postDelayed({ placePredictionViewModel.searchPlace(queryText.toString(),isNewSession) }, 300)
+                    handler.postDelayed({
+                        placePredictionViewModel.searchPlace(
+                            queryText.toString(),
+                            isNewSession
+                        )
+                    }, 300)
                 }
 
             }
@@ -571,13 +618,24 @@ class NavigationFragment : BaseFragment() {
         binding.inputlayoutPickup.setEndIconOnClickListener {
             setPickupValueToEditText("")
             sharedTripViewModel.trip.removePlaceByPlaceType(PlaceType.PICKUP)
+            removeRouteView()
         }
         binding.inputDestination.setEndIconOnClickListener {
             setDestinationValueToEditText("")
             sharedTripViewModel.trip.removePlaceByPlaceType(PlaceType.DESTINATION)
+            removeRouteView()
         }
 
     }
+
+    private fun removeRouteView() {
+        mapboxNavigation.setRoutes(listOf())
+        mapboxReplayer.stop()
+        binding.routeInfo.visibility = View.GONE
+        binding.viewAnimator.visibility = View.VISIBLE
+        binding.txtPin.visibility = View.VISIBLE
+    }
+
     private fun initPlaceRecyclerView() {
         val layoutManager = LinearLayoutManager(requireContext())
         binding.placeRecyclerView.layoutManager = layoutManager
@@ -590,13 +648,23 @@ class NavigationFragment : BaseFragment() {
         )
         placeAdapter.onPlaceClickListener = { prediction ->
             isNewSession = true
-            placePredictionViewModel.getPlaceDetailById(prediction,edtType){ MainPlace ->
+            placePredictionViewModel.getPlaceDetailById(prediction, edtType) { MainPlace ->
                 recentList.add(MainPlace)
-                recentPlaceListAdapter.notifyItemInserted(recentList.size-1)
+                recentPlaceListAdapter.notifyItemInserted(recentList.size - 1)
+                if (binding.edtPickupAddress.hasFocus()) {
+                    MainPlace.place_type = PlaceType.PICKUP
+                } else {
+                    MainPlace.place_type = PlaceType.DESTINATION
+                }
                 sharedTripViewModel.trip.addPlace(MainPlace)
                 if (sharedTripViewModel.trip.isPickupAndDestinationsLocationAvailable()) {
-                    binding.viewAnimator.visibility=View.GONE
-                    binding.edtDestinationAddress.setText(sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_name)
+                    binding.viewAnimator.visibility = View.GONE
+                    binding.txtPin.visibility = View.GONE
+                    binding.edtDestinationAddress.setText(
+                        sharedTripViewModel.trip.getPlaceByPlaceType(
+                            PlaceType.DESTINATION
+                        )?.place_name
+                    )
                     findRoute(
                         Point.fromLngLat(
                             sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_latLong!!.longitude,
@@ -605,11 +673,11 @@ class NavigationFragment : BaseFragment() {
                     )
                 } else {
                     if (edtType == PlaceType.PICKUP) {
-                        setPickupValueToEditText(placeName = MainPlace.place_name)
+                        setPickupValueToEditText(placeName = MainPlace.place_address)
                     } else {
-                        setDestinationValueToEditText(placeName = MainPlace.place_name)
+                        setDestinationValueToEditText(placeName = MainPlace.place_address)
                     }
-                    binding.viewAnimator.displayedChild =  0
+                    binding.animateView.displayedChild = 0
                 }
             }
         }
@@ -621,7 +689,11 @@ class NavigationFragment : BaseFragment() {
                 HomeViewType.ROUTE.toString() -> {
                     binding.bottomView.visibility = View.GONE
                     handleHomeFragmentUI(HomeViewType.ROUTE)
-                    binding.edtDestinationAddress.setText(sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_name)
+                    binding.edtDestinationAddress.setText(
+                        sharedTripViewModel.trip.getPlaceByPlaceType(
+                            PlaceType.DESTINATION
+                        )?.place_name
+                    )
                     findRoute(
                         Point.fromLngLat(
                             sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_latLong!!.longitude,
@@ -716,6 +788,13 @@ class NavigationFragment : BaseFragment() {
         binding.mapView.camera.addCameraAnimationsLifecycleListener(
             NavigationBasicGesturesHandler(navigationCamera)
         )
+        binding.mapView.logo.updateSettings {
+            enabled = false
+        }
+
+        binding.mapView.attribution.updateSettings {
+            enabled = false
+        }
         navigationCamera.registerNavigationCameraStateChangeObserver { navigationCameraState ->
             // shows/hide the recenter button depending on the camera state
             when (navigationCameraState) {
@@ -805,25 +884,28 @@ class NavigationFragment : BaseFragment() {
         binding.startNavigation.setOnClickListener {
             navigationCamera.requestNavigationCameraToFollowing()
             binding.routeOverview.showTextAndExtend(BUTTON_ANIMATION_DURATION)
-
             if (isRouteFetched) {
                 isRouteFetched = false
                 binding.speedLimitView.visibility = View.VISIBLE
                 binding.maneuverView.visibility = View.VISIBLE
                 binding.tripProgressCard.visibility = View.VISIBLE
+                binding.soundButton.visibility = View.VISIBLE
                 binding.setAddressLy.visibility = View.GONE
+                voiceInstructionsPlayer.volume(SpeechVolume(1f))
             }
         }
         binding.recenter.setOnClickListener {
             navigationCamera.requestNavigationCameraToFollowing()
             binding.routeOverview.showTextAndExtend(BUTTON_ANIMATION_DURATION)
-
             if (isRouteFetched) {
                 isRouteFetched = false
                 binding.speedLimitView.visibility = View.VISIBLE
                 binding.maneuverView.visibility = View.VISIBLE
                 binding.tripProgressCard.visibility = View.VISIBLE
-             }
+                binding.soundButton.visibility = View.VISIBLE
+                binding.setAddressLy.visibility = View.GONE
+                voiceInstructionsPlayer.volume(SpeechVolume(1f))
+            }
         }
         binding.routeOverview.setOnClickListener {
             navigationCamera.requestNavigationCameraToOverview()
@@ -839,22 +921,32 @@ class NavigationFragment : BaseFragment() {
         }
 
         // set initial sounds button state
-        binding.soundButton.unmute()
 
         // start the trip session to being receiving location updates in free drive
         // and later when a route is set also receiving route progress updates
+        binding.soundButton.unmute()
         mapboxNavigation.startTripSession()
     }
 
 
     private fun navigateToEnterDestinationFragment() {
-        binding.bottomView.visibility=View.GONE
-        binding.routeInfo.visibility=View.GONE
-        binding.setAddressLy.visibility=View.VISIBLE
-        binding.viewAnimator.visibility=View.VISIBLE
-        binding.edtPickupAddress.isEnabled=true
-        binding.edtDestinationAddress.isEnabled=true
-     }
+        if (currLocationAddress.isNotEmpty()) {
+            binding.bottomView.visibility = View.GONE
+            binding.routeInfo.visibility = View.GONE
+            binding.setAddressLy.visibility = View.VISIBLE
+            binding.viewAnimator.visibility = View.VISIBLE
+            binding.edtPickupAddress.isEnabled = true
+            binding.edtDestinationAddress.isEnabled = true
+            sharedTripViewModel.trip.addPlace(
+                PlaceType.PICKUP,
+                currLatLong,
+                currLocationAddress
+            )
+            setPickupValueToEditText(currLocationAddress)
+        } else {
+            showToast("Please check your internet connection or gps provider")
+        }
+    }
 
     companion object {
         private const val BUTTON_ANIMATION_DURATION = 1500L
@@ -876,7 +968,6 @@ class NavigationFragment : BaseFragment() {
         binding.edtDestinationAddress.setText(placeName)
         destinationListenerCallRequired = true
     }
-
 
 
     override fun onStart() {
@@ -913,6 +1004,7 @@ class NavigationFragment : BaseFragment() {
 
     private fun findRoute(destination: Point) {
         showProgressDialog(true)
+        voiceInstructionsPlayer.volume(SpeechVolume(0f))
         val currentLocation = navigationLocationProvider.lastLocation
         val bearing = currentLocation?.bearing?.toDouble() ?: run {
             45.0
@@ -943,7 +1035,12 @@ class NavigationFragment : BaseFragment() {
                     routes: List<DirectionsRoute>,
                     routerOrigin: RouterOrigin
                 ) {
-                    setRouteAndStartNavigation(routes)
+                    if (routes.isNotEmpty()) {
+                        setRouteAndStartNavigation(routes)
+                    } else {
+                        showProgressDialog(false)
+                        showToast("Route not found, Please try another one")
+                    }
                 }
 
                 override fun onFailure(
@@ -952,15 +1049,17 @@ class NavigationFragment : BaseFragment() {
                 ) {
                     showProgressDialog(false)
                     showToast("Route not found, Please try another one")
-                    binding.setAddressLy.visibility=View.VISIBLE
-                    binding.viewAnimator.visibility=View.VISIBLE
+                    binding.setAddressLy.visibility = View.VISIBLE
+                    binding.viewAnimator.visibility = View.VISIBLE
+                    binding.txtPin.visibility = View.VISIBLE
                 }
 
                 override fun onCanceled(routeOptions: RouteOptions, routerOrigin: RouterOrigin) {
                     showProgressDialog(false)
                     showToast("Route not found, Please try another one")
-                    binding.setAddressLy.visibility=View.VISIBLE
-                    binding.viewAnimator.visibility=View.VISIBLE
+                    binding.setAddressLy.visibility = View.VISIBLE
+                    binding.viewAnimator.visibility = View.VISIBLE
+                    binding.txtPin.visibility = View.VISIBLE
                 }
             }
         )
@@ -974,8 +1073,7 @@ class NavigationFragment : BaseFragment() {
         // start location simulation along the primary route
         startSimulation(routes.first())
         // show UI elements
-        binding.soundButton.visibility = View.VISIBLE
-        binding.routeInfo.visibility=View.VISIBLE
+        binding.routeInfo.visibility = View.VISIBLE
         val km = routes.first().distance() / 1000
         binding.routeDistance.text = km.toInt().toString() + "km"
         binding.routeTime.text = convertSecondToTime(routes.first().duration().toInt())
@@ -983,8 +1081,8 @@ class NavigationFragment : BaseFragment() {
             sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_name
         binding.edtPickupAddress.setText(sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.PICKUP)?.place_address)
         binding.edtDestinationAddress.setText(sharedTripViewModel.trip.getPlaceByPlaceType(PlaceType.DESTINATION)?.place_name)
-        binding.edtPickupAddress.isEnabled=false
-        binding.edtDestinationAddress.isEnabled=false
+//        binding.edtPickupAddress.isEnabled = false
+//        binding.edtDestinationAddress.isEnabled = false
 
         // move the camera to overview when new route is available
         navigationCamera.requestNavigationCameraToOverview()
@@ -1015,11 +1113,21 @@ class NavigationFragment : BaseFragment() {
         binding.overSpeedTv.text = maxSpeedLimit.toString()
         if (speedKmh > maxSpeedLimit) {
             binding.overSpeedRl.visibility = View.VISIBLE
-            binding.normalSpeedTv.setTextColor(ContextCompat.getColor(requireContext(),R.color.over_speed))
+            binding.normalSpeedTv.setTextColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.over_speed
+                )
+            )
 
-        }else{
+        } else {
             binding.overSpeedRl.visibility = View.GONE
-            binding.normalSpeedTv.setTextColor(ContextCompat.getColor(requireContext(),R.color.normal_speed))
+            binding.normalSpeedTv.setTextColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.normal_speed
+                )
+            )
 
         }
     }
@@ -1054,7 +1162,9 @@ class NavigationFragment : BaseFragment() {
             clearEvents()
             val replayEvents = ReplayRouteMapper().mapDirectionsRouteGeometry(route)
             pushEvents(replayEvents)
-            seekTo(replayEvents.first())
+            if (replayEvents.isNotEmpty()){
+                seekTo(replayEvents.first())
+            }
             play()
         }
     }
